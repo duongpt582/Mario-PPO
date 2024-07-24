@@ -109,6 +109,7 @@ class CustomSkipFrame(Wrapper):
         max_state = np.max(np.concatenate(last_states, 0), 0)
         self.states[:-1] = self.states[1:]
         self.states[-1] = max_state
+
         return self.states[None, :, :, :].astype(np.float32), total_reward, done, info
 
     def reset(self):

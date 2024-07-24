@@ -35,6 +35,8 @@ def test(opt):
     env = create_train_env(opt.world, opt.stage, actions,
                            "{}/video_{}_{}.mp4".format(opt.output_path, opt.world, opt.stage))
     model = PPO(env.observation_space.shape[0], len(actions))
+    print("Actions: ", actions)
+
     if torch.cuda.is_available():
         model.load_state_dict(torch.load("{}/ppo_super_mario_bros_{}_{}".format(opt.saved_path, opt.world, opt.stage)))
         model.cuda()
@@ -43,17 +45,26 @@ def test(opt):
                                          map_location=lambda storage, loc: storage))
     model.eval()
     state = torch.from_numpy(env.reset())
+    print("state: ", state)
+
     while True:
         if torch.cuda.is_available():
             state = state.cuda()
 
+        # logits: Đầu ra chưa chuẩn hóa
         logits, value = model(state)
+        # Tính xác suất
         policy = F.softmax(logits, dim=1)
+        # Hành động nhảy hoặc đi theo kiểu tay cầm
+        # Và xác định hành động có xác suất cao nhất từ phân phối xác suất
         action = torch.argmax(policy).item()
         state, reward, done, info = env.step(action)
         state = torch.from_numpy(state)
 
-        print(policy)
+        #A: Nút nhảy (Jump). Khi Mario nhảy lên không trung.
+        #B: Nút chạy nhanh (Run) hoặc bắn (Fireball) nếu Mario đang trong trạng thái Fire Mario.
+
+        # print("action: ", actions[action])
 
         env.render()
         if info["flag_get"]:
